@@ -13,10 +13,10 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-dot"></div>
+      <img class="brand-logo" src="/static/img/logo.png" alt="netmon">
       <div>
         <div class="brand-name">netmon</div>
-        <div class="brand-sub">network diagnostics</div>
+        <div class="brand-sub" id="brand-version">network diagnostics</div>
       </div>
     </div>
 
@@ -31,11 +31,19 @@
     </nav>
 
     <div class="sidebar-foot">
-      <button class="theme-toggle" id="theme-toggle" title="Сменить тему">
-        <span class="ic ic-sun" data-icon="sun"></span>
-        <span class="ic ic-moon" data-icon="moon"></span>
-      </button>
-      <div class="muted xs" id="sys-meta">—</div>
+      <label class="theme-switch" title="Светлая / тёмная тема">
+        <input type="checkbox" id="theme-toggle">
+        <span class="theme-track">
+          <span class="theme-ic theme-ic-sun" data-icon="sun"></span>
+          <span class="theme-ic theme-ic-moon" data-icon="moon"></span>
+          <span class="theme-thumb"></span>
+        </span>
+        <span class="theme-label muted xs">тема</span>
+      </label>
+      <div class="version-block">
+        <div class="muted xs" id="version-text">v?.?.?</div>
+        <a href="#" class="muted xs" id="version-update" hidden>обновление</a>
+      </div>
     </div>
   </aside>
 
@@ -73,8 +81,9 @@
         <div class="section-head">
           <h2>Live availability</h2>
           <div class="section-actions">
-            <label class="muted xs inline"><input type="checkbox" id="live-autorefresh" checked> авто-обновление каждые <input type="number" id="live-interval" value="15" min="5" max="120" class="xxs"> сек</label>
+            <label class="muted xs inline"><input type="checkbox" id="live-autorefresh" checked> авто каждые <input type="number" id="live-interval" value="15" min="5" max="120" class="xxs"> сек</label>
             <button class="btn small" id="live-refresh"><span data-icon="refresh"></span> Сейчас</button>
+            <button class="btn small" id="live-edit"><span data-icon="edit"></span> Настроить</button>
           </div>
         </div>
         <div class="live-grid" id="live-grid"></div>
@@ -301,8 +310,9 @@
       <!-- Reports -->
       <section class="panel" id="panel-reports">
         <div class="block">
-          <div class="section-actions">
+          <div class="section-actions" style="margin-bottom: 10px">
             <button class="btn" id="reports-refresh"><span data-icon="refresh"></span> Обновить</button>
+            <button class="btn" id="reports-open-folder"><span data-icon="folder"></span> Открыть папку</button>
           </div>
           <table class="data-table" id="reports-table">
             <thead><tr><th>Имя</th><th>Дата</th><th>Размер</th><th>Тип</th><th></th></tr></thead>
@@ -338,6 +348,7 @@
 <script src="/static/js/tools.js"></script>
 <script src="/static/js/reports.js"></script>
 <script src="/static/js/dashboard.js"></script>
+<script src="/static/js/version.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

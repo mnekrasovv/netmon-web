@@ -91,6 +91,13 @@ code, pre, .mono {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   box-shadow: 0 4px 10px var(--accent-soft);
 }
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
 .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.2px; }
 .brand-sub  { color: var(--text-dim); font-size: 11px; }
 
@@ -120,26 +127,68 @@ code, pre, .mono {
 
 .sidebar-foot {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
   padding-top: 12px;
   border-top: 1px solid var(--border-soft);
   margin-top: 8px;
 }
-.theme-toggle {
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  color: var(--text);
-  display: inline-flex;
+
+/* Theme switch (toggle) */
+.theme-switch {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.theme-switch input { display: none; }
+.theme-track {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  justify-content: space-between;
+  transition: background 0.15s;
+}
+.theme-ic {
+  width: 12px; height: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dim);
+  z-index: 1;
+}
+.theme-ic svg { width: 12px; height: 12px; }
+.theme-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.18s;
+}
+[data-theme="light"] .theme-thumb { transform: translateX(24px); }
+.theme-label { letter-spacing: 0.3px; }
+
+.version-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
 }
-.theme-toggle .ic { display: inline-flex; }
-[data-theme="dark"]  .theme-toggle .ic-sun { display: none; }
-[data-theme="light"] .theme-toggle .ic-moon { display: none; }
+#version-update {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent);
+}
+#version-update:hover { color: var(--accent-2); }
 
 /* Main */
 .main {

@@ -5,6 +5,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import platform
+import subprocess
 import threading
 import time
 import webbrowser
@@ -23,6 +26,15 @@ from core.runner import IS_WINDOWS, has, run_cmd
 
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
+VERSION_FILE = ROOT / "VERSION"
+
+try:
+    APP_VERSION = VERSION_FILE.read_text(encoding="utf-8").strip()
+except Exception:
+    APP_VERSION = "dev"
+
+GITHUB_LATEST_API = "https://api.github.com/repos/mnekrasovv/netmon-web/releases/latest"
+GITHUB_RELEASES_URL = "https://github.com/mnekrasovv/netmon-web/releases"
 
 app = FastAPI(title="netmon-web")
 
@@ -431,6 +443,66 @@ async def api_reports_save_json(request: Request):
 async def api_suggestions(request: Request):
     data = await request.json()
     return {"suggestions": suggestions.analyze(data)}
+
+
+# ── REST: version / updates ──────────────────────────────────────────────────────
+
+def _semver_tuple(v: str) -> tuple:
+    parts = v.lstrip("v").split(".")
+    out = []
+    for p in parts:
+        try: out.append(int(p))
+        except ValueError: out.append(0)
+    while len(out) < 3:
+        out.append(0)
+    return tuple(out[:3])
+
+
+@app.get("/api/version")
+def api_version():
+    try:
+        import requests as _req
+        r = _req.get(GITHUB_LATEST_API, timeout=(3, 5),
+                     headers={"Accept": "application/vnd.github+json"})
+        if r.status_code == 200:
+            data = r.json()
+            latest = data.get("tag_name", "").strip()
+            update_available = (
+                latest
+                and _semver_tuple(latest) > _semver_tuple(APP_VERSION)
+            )
+            return {
+                "current": APP_VERSION,
+                "latest": latest,
+                "update_available": update_available,
+                "release_url": data.get("html_url") or GITHUB_RELEASES_URL,
+                "release_notes": (data.get("body") or "")[:600],
+            }
+    except Exception:
+        pass
+    return {
+        "current": APP_VERSION,
+        "latest": None,
+        "update_available": False,
+        "release_url": GITHUB_RELEASES_URL,
+    }
+
+
+# ── REST: open reports folder in OS file manager ─────────────────────────────────
+
+@app.post("/api/reports/open-folder")
+def api_open_reports_folder():
+    path = str(reports.REPORTS_DIR.resolve())
+    try:
+        if IS_WINDOWS:
+            os.startfile(path)  # type: ignore[attr-defined]
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+        return {"ok": True, "path": path}
+    except Exception as e:
+        raise HTTPException(500, f"failed: {e}")
 
 
 # ── REST: live dashboard ─────────────────────────────────────────────────────────

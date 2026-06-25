@@ -51,7 +51,19 @@ const Reports = {
     openModal(name, body);
   },
 
+  async openFolder() {
+    try {
+      const r = await API.post('/api/reports/open-folder', {});
+      const msg = el('div', { class: 'muted xs', style: 'margin-top: 8px' }, `Папка открыта: ${r.path}`);
+      $('#reports-table').parentNode.appendChild(msg);
+      setTimeout(() => msg.remove(), 3000);
+    } catch (e) {
+      alert('Не удалось открыть папку: ' + e);
+    }
+  },
+
   initUI() {
     $('#reports-refresh').addEventListener('click', () => this.refresh());
+    $('#reports-open-folder').addEventListener('click', () => this.openFolder());
   },
 };

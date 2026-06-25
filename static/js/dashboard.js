@@ -121,10 +121,46 @@ const Dashboard = {
     this.autoTimer = setInterval(() => this.refresh(), sec * 1000);
   },
 
+  async openEditor() {
+    const data = await API.get('/api/live/services');
+    const list = data.services.map(s => `${s.host} ${s.port} ${s.name}`).join('\n');
+    const ta = el('textarea', {
+      rows: '14',
+      style: 'width: 100%; font-family: monospace; font-size: 12px',
+    });
+    ta.value = list;
+    const body = el('div', {},
+      el('div', { class: 'muted xs', style: 'margin-bottom: 8px' },
+        'Один сервис на строку: host port name. Например:'),
+      el('div', { class: 'mono xs', style: 'margin-bottom: 12px; color: var(--text-dim)' },
+        'google.com 443 Google'),
+      ta,
+      el('div', { class: 'row gap', style: 'margin-top: 14px; justify-content: flex-end' },
+        el('button', { class: 'btn ghost', onclick: closeModal }, 'Отмена'),
+        el('button', { class: 'btn primary', onclick: async () => {
+          const services = ta.value.split('\n').map(l => l.trim()).filter(Boolean)
+            .map(line => {
+              const parts = line.split(/\s+/);
+              const host = parts[0];
+              const port = parseInt(parts[1] || '443', 10);
+              const name = parts.slice(2).join(' ') || host;
+              const kind = port === 53 ? 'dns' : 'web';
+              return { host, port, name, kind };
+            });
+          await API.put('/api/live/services', { services });
+          closeModal();
+          await this.refresh();
+        }}, 'Сохранить'),
+      ),
+    );
+    openModal('Сервисы для live availability', body);
+  },
+
   initUI() {
     $('#live-refresh').addEventListener('click', () => this.refresh());
     $('#live-autorefresh').addEventListener('change', () => this.startAutoRefresh());
     $('#live-interval').addEventListener('change', () => this.startAutoRefresh());
+    $('#live-edit').addEventListener('click', () => this.openEditor());
   },
 
   async activate() {

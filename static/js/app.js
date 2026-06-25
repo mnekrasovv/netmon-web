@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   Reports.initUI();
   Dashboard.initUI();
 
+  Version.load();
   await Tools.loadPresets();
   await Hosts.load();
   Hosts.render();

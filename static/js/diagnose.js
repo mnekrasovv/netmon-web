@@ -8,6 +8,7 @@ const Diagnose = {
   currentSSE: null,
   runQueue: [],
   viewMode: 'parsed',
+  runId: 0,
 
   combinedHosts() { return [...Hosts.cache, ...this.customHosts]; },
 
@@ -88,6 +89,7 @@ const Diagnose = {
   },
 
   stop() {
+    this.runId++;     // invalidate any in-flight chain
     if (this.currentSSE) { this.currentSSE.close(); this.currentSSE = null; }
     this.runQueue = [];
     $('#diag-run').disabled = false;
@@ -95,8 +97,9 @@ const Diagnose = {
     this.setStatus('остановлено');
   },
 
-  // Tasks are objects: {label, kind, host?, name?, params?, target?}
-  async runNext() {
+  async runNext(runId) {
+    if (runId !== this.runId) return; // stale chain — abort silently
+
     if (this.runQueue.length === 0) {
       $('#diag-run').disabled = false;
       $('#diag-stop').disabled = true;
@@ -110,65 +113,167 @@ const Diagnose = {
     const section = this.appendSection(task.label);
 
     try {
-      await this.runTask(task, section);
+      await this.runTask(task, section, runId);
     } catch (e) {
-      this.appendLine(`[error] ${e}`);
+      if (runId === this.runId) this.appendLine(`[error] ${e}`);
     }
-    return this.runNext();
+    return this.runNext(runId);
   },
 
-  async runTask(task, section) {
+  async runTask(task, section, runId) {
     const t = task.kind;
+    const stale = () => runId !== this.runId;
+
     if (t === 'ping') {
-      // Raw stream + parsed at end
       await this.streamAndCapture(`/api/stream/ping?host=${encodeURIComponent(task.host)}&count=${task.params.count}`);
+      if (stale()) return;
       const r = await API.get(`/api/parsed/ping?host=${encodeURIComponent(task.host)}&count=${task.params.count}`);
-      const node = Render.ping({ ...r.parsed, host: task.host, name: task.name });
-      section.appendChild(node);
+      if (stale()) return;
+      section.appendChild(Render.ping({ ...r.parsed, host: task.host, name: task.name }));
       this.parsedResults.push({ type: 'ping', ...r.parsed, name: task.name });
     } else if (t === 'trace') {
       await this.streamAndCapture(`/api/stream/trace?host=${encodeURIComponent(task.host)}`);
+      if (stale()) return;
       const r = await API.get(`/api/parsed/trace?host=${encodeURIComponent(task.host)}`);
+      if (stale()) return;
       section.appendChild(Render.trace(r.parsed || [], task.host));
       this.parsedResults.push({ type: 'trace', host: task.host, hops: r.parsed });
     } else if (t === 'mtr') {
-      this.appendLine('Запуск MTR (parsed)...');
+      this.appendLine(`MTR → ${task.host} (${task.params.cycles} циклов на хоп, parsed)...`);
       const r = await API.get(`/api/parsed/mtr?host=${encodeURIComponent(task.host)}&cycles=${task.params.cycles}`);
+      if (stale()) return;
+      this.formatMtr(r.hops || []).forEach(l => this.appendLine(l));
       section.appendChild(Render.mtr(task.host, r.hops || []));
       this.parsedResults.push({ type: 'mtr', host: task.host, hops: r.hops });
-      this.appendLine(`MTR: ${(r.hops || []).length} хопов`);
     } else if (t === 'http') {
       await this.streamAndCapture(`/api/stream/http?url=${encodeURIComponent(task.host)}`);
+      if (stale()) return;
       const r = await API.get(`/api/parsed/http?url=${encodeURIComponent(task.host)}`);
+      if (stale()) return;
       section.appendChild(Render.http(r));
       this.parsedResults.push({ type: 'http', ...r });
     } else if (t === 'dns') {
-      this.appendLine('Загрузка DNS-матрицы...');
+      this.appendLine('DNS матрица:');
       const matrix = await API.get('/api/dns/matrix');
       const pings  = await API.get('/api/dns/pings');
+      if (stale()) return;
+      this.formatDnsMatrix(matrix).forEach(l => this.appendLine(l));
+      this.appendLine('');
+      this.appendLine('Пинг до DNS серверов:');
+      this.formatDnsPings(pings.pings).forEach(l => this.appendLine(l));
       section.appendChild(Render.dns(matrix));
       this.parsedResults.push({ type: 'dns', matrix, pings: pings.pings });
     } else if (t === 'external-ip') {
-      this.appendLine('Получение внешнего IP...');
+      this.appendLine('Внешний IP:');
       const r = await API.get('/api/external-ip');
+      if (stale()) return;
+      this.formatExternalIp(r).forEach(l => this.appendLine(l));
       section.appendChild(Render.external_ip(r));
       this.parsedResults.push({ type: 'external_ip', ...r });
-      // Append console lines from stream too:
-      await this.streamAndCapture('/api/stream/external-ip');
     } else if (t === 'sysinfo') {
       const r = await API.get('/api/sysinfo');
+      if (stale()) return;
+      this.formatSysinfo(r).forEach(l => this.appendLine(l));
       section.appendChild(Render.sysinfo(r));
       this.parsedResults.push({ type: 'sysinfo', ...r });
     } else if (t === 'interfaces') {
       const r = await API.get('/api/parsed/interfaces');
+      if (stale()) return;
+      this.formatInterfaces(r.interfaces || []).forEach(l => this.appendLine(l));
       section.appendChild(Render.interfaces(r.interfaces || []));
       this.parsedResults.push({ type: 'interfaces', interfaces: r.interfaces });
-      if (r.raw) (r.raw.split('\n')).slice(0, 200).forEach(l => this.bufferLines.push(l));
     } else if (t === 'connections') {
       const r = await API.get('/api/parsed/connections');
+      if (stale()) return;
+      this.formatConnections(r.connections || []).forEach(l => this.appendLine(l));
       section.appendChild(Render.connections(r.connections || []));
       this.parsedResults.push({ type: 'connections', count: (r.connections || []).length });
     }
+  },
+
+  // ── Raw text formatters ─────────────────────────────────────────────────────
+
+  formatMtr(hops) {
+    const out = [];
+    out.push(pad('Hop', 4) + '  ' + pad('IP', 17) + '  ' + pad('Loss%', 7) + '  ' + pad('Sent', 6) + '  ' + pad('Recv', 6) + '  ' + pad('Avg ms', 8));
+    out.push('─'.repeat(58));
+    hops.forEach(h => {
+      const ip = h.ip || '* * *';
+      const loss = h.loss != null ? h.loss.toFixed(1) + '%' : '—';
+      const avg = h.avg != null ? h.avg.toFixed(1) : '—';
+      out.push(pad(h.hop, 4) + '  ' + pad(ip, 17) + '  ' + pad(loss, 7) + '  ' + pad(h.sent || 0, 6) + '  ' + pad(h.recv || 0, 6) + '  ' + pad(avg, 8));
+    });
+    return out;
+  },
+
+  formatDnsMatrix(matrix) {
+    const out = [];
+    const colW = 18;
+    let hdr = pad('Домен', 24);
+    matrix.servers.forEach(s => hdr += pad(s, colW));
+    out.push(hdr);
+    out.push('─'.repeat(24 + colW * matrix.servers.length));
+    matrix.domains.forEach(d => {
+      let row = pad(d, 24);
+      matrix.servers.forEach(s => row += pad(matrix.results[d][s] || '—', colW));
+      out.push(row);
+    });
+    return out;
+  },
+
+  formatDnsPings(pings) {
+    return pings.map(p => {
+      const lbl = pad(`${p.ip} (${p.name})`, 28);
+      if (p.avg != null) return `  ${lbl} avg ${p.avg.toFixed(1)}ms  loss=${p.loss}%`;
+      return `  ${lbl} недостижим`;
+    });
+  },
+
+  formatExternalIp(r) {
+    const out = [];
+    const services = r.services || {};
+    Object.entries(services).forEach(([svc, ip]) => out.push(`  ${pad(svc, 45)}: ${ip || 'недоступен'}`));
+    out.push('');
+    out.push('Гео-информация:');
+    const geo = r.geo || {};
+    [['ip','IP'], ['hostname','Hostname'], ['city','Город'], ['region','Регион'],
+     ['country','Страна'], ['org','Провайдер'], ['timezone','Timezone']]
+     .forEach(([k, label]) => { if (geo[k]) out.push(`  ${pad(label, 10)}: ${geo[k]}`); });
+    return out;
+  },
+
+  formatSysinfo(info) {
+    const out = [];
+    [['hostname','Hostname'], ['os','ОС'], ['distrib','Дистрибутив'],
+     ['arch','Архитектура'], ['python','Python'], ['uptime','Uptime'],
+     ['user','Пользователь']].forEach(([k, label]) => {
+      if (info[k]) out.push(`  ${pad(label, 14)}: ${info[k]}`);
+    });
+    return out;
+  },
+
+  formatInterfaces(ifaces) {
+    const out = [];
+    ifaces.forEach(i => {
+      out.push(`▸ ${i.name}${i.up === false ? ' (DOWN)' : ''}`);
+      if (i.mac) out.push(`    MAC : ${i.mac}`);
+      if (i.mtu) out.push(`    MTU : ${i.mtu}`);
+      (i.addresses || []).forEach(a => out.push(`    IP  : ${a.addr}/${a.prefix} (${a.family})`));
+      if (i.dns && i.dns.length) out.push(`    DNS : ${i.dns.join(', ')}`);
+      out.push('');
+    });
+    return out;
+  },
+
+  formatConnections(conns) {
+    const out = [];
+    out.push(pad('Proto', 6) + '  ' + pad('State', 14) + '  ' + pad('Local', 30) + '  ' + 'Remote');
+    out.push('─'.repeat(80));
+    conns.slice(0, 200).forEach(c => {
+      out.push(pad(c.proto, 6) + '  ' + pad(c.state, 14) + '  ' + pad(c.local, 30) + '  ' + c.remote);
+    });
+    if (conns.length > 200) out.push(`... и ещё ${conns.length - 200}`);
+    return out;
   },
 
   streamAndCapture(url) {
@@ -188,6 +293,8 @@ const Diagnose = {
     const needHosts = tests.some(t => ['ping', 'trace', 'mtr', 'http'].includes(t));
     if (needHosts && hosts.length === 0) { alert('Выберите хотя бы один хост'); return; }
 
+    this.runId++;
+    const myRunId = this.runId;
     this.clear();
     $('#diag-run').disabled = true;
     $('#diag-stop').disabled = false;
@@ -210,7 +317,7 @@ const Diagnose = {
       else if (t === 'connections') q.push({ kind: 'connections', label: 'Соединения',   params: {} });
     }
     this.runQueue = q;
-    await this.runNext();
+    await this.runNext(myRunId);
   },
 
   async showSuggestions() {
@@ -291,3 +398,4 @@ const Diagnose = {
 };
 
 function slug(s) { return (s || '').replace(/[^a-zа-я0-9]/gi, '_').toLowerCase(); }
+function pad(s, n) { s = String(s); return s.length >= n ? s : s + ' '.repeat(n - s.length); }
