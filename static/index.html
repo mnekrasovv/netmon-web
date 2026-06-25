@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>netmon-web</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">●</span>
+    <span class="brand-name">netmon</span>
+    <span class="brand-sub">web</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="diagnose">Diagnose</button>
+    <button class="tab" data-tab="monitor">Monitor</button>
+    <button class="tab" data-tab="hosts">Hosts</button>
+    <button class="tab" data-tab="reports">Reports</button>
+  </nav>
+  <div class="meta">
+    <span id="sys-host">—</span>
+    <span class="sep">·</span>
+    <span id="sys-time">—</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Dashboard -->
+  <section class="panel" id="panel-dashboard">
+    <h2>Обзор</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Хосты</div>
+        <div class="card-val" id="card-hosts">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Внешний IP</div>
+        <div class="card-val small" id="card-ip">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Шлюз</div>
+        <div class="card-val small" id="card-gw">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Отчёты</div>
+        <div class="card-val" id="card-reports">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="block">
+        <h3>Система</h3>
+        <table class="kv" id="sysinfo-table"></table>
+      </div>
+      <div class="block">
+        <h3>Быстрые действия</h3>
+        <div class="quick-actions">
+          <button class="btn" data-quick="dashboard-refresh">Обновить</button>
+          <button class="btn" data-tab-go="diagnose">Запустить диагностику</button>
+          <button class="btn" data-tab-go="monitor">Массовая проверка</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagnose -->
+  <section class="panel" id="panel-diagnose">
+    <h2>Диагностика</h2>
+    <div class="grid-diagnose">
+      <div class="block">
+        <h3>Хосты</h3>
+        <div class="hint">Множественный выбор · кастомный хост можно добавить через [+]</div>
+        <div class="hosts-pick" id="hosts-pick"></div>
+        <div class="add-row">
+          <input type="text" id="custom-host-input" placeholder="ip / домен">
+          <button class="btn small" id="add-custom-host">+ добавить</button>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Тесты</h3>
+        <div class="tests-pick">
+          <label class="chk"><input type="checkbox" data-test="ping"> Ping</label>
+          <label class="chk"><input type="checkbox" data-test="trace"> Traceroute</label>
+          <label class="chk"><input type="checkbox" data-test="mtr"> MTR</label>
+          <label class="chk"><input type="checkbox" data-test="http"> HTTP</label>
+          <hr>
+          <label class="chk"><input type="checkbox" data-test="dns"> DNS диагностика</label>
+          <label class="chk"><input type="checkbox" data-test="external-ip"> Внешний IP</label>
+          <label class="chk"><input type="checkbox" data-test="sysinfo"> Системная инфа</label>
+          <label class="chk"><input type="checkbox" data-test="interfaces"> Интерфейсы</label>
+          <label class="chk"><input type="checkbox" data-test="connections"> Соединения</label>
+          <label class="chk"><input type="checkbox" data-test="arp"> ARP</label>
+        </div>
+
+        <h3>Параметры</h3>
+        <div class="params">
+          <label>Ping count <input type="number" id="ping-count" value="10" min="1" max="100"></label>
+          <label>MTR cycles <input type="number" id="mtr-cycles" value="10" min="1" max="50"></label>
+        </div>
+
+        <div class="run-row">
+          <button class="btn primary" id="diag-run">Запустить</button>
+          <button class="btn" id="diag-stop" disabled>Стоп</button>
+          <button class="btn" id="diag-save" disabled>Сохранить отчёт</button>
+          <button class="btn ghost" id="diag-clear">Очистить</button>
+        </div>
+      </div>
+
+      <div class="block console-block">
+        <h3>Live-вывод</h3>
+        <pre class="console" id="diag-console"></pre>
+        <div class="diag-status" id="diag-status">готов</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monitor -->
+  <section class="panel" id="panel-monitor">
+    <h2>Массовый мониторинг</h2>
+    <div class="grid-monitor">
+      <div class="block">
+        <h3>Категории</h3>
+        <div id="categories-pick" class="hosts-pick"></div>
+      </div>
+      <div class="block">
+        <h3>Параметры</h3>
+        <div class="params">
+          <label>Ping count <input type="number" id="m-ping-count" value="5" min="1" max="50"></label>
+          <label>Workers <input type="number" id="m-workers" value="20" min="1" max="100"></label>
+          <label>HTTP timeout <input type="number" id="m-http-timeout" value="10" min="1" max="60"></label>
+          <label class="chk inline"><input type="checkbox" id="m-no-http"> Без HTTP</label>
+        </div>
+        <div class="run-row">
+          <button class="btn primary" id="batch-run">Запустить</button>
+          <button class="btn" id="batch-stop" disabled>Стоп</button>
+          <button class="btn" id="batch-save" disabled>Сохранить HTML + JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Прогресс</h3>
+      <div class="progress-wrap">
+        <div class="progress"><div class="progress-bar" id="batch-bar"></div></div>
+        <div class="progress-text" id="batch-progress-text">0 / 0</div>
+      </div>
+      <div class="stats-row" id="batch-stats">
+        <div class="stat-pill ok">OK <span data-stat="ok">0</span></div>
+        <div class="stat-pill slow">SLOW <span data-stat="slow">0</span></div>
+        <div class="stat-pill warn">WARN <span data-stat="warn">0</span></div>
+        <div class="stat-pill fail">FAIL <span data-stat="fail">0</span></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="block">
+        <h3>Распределение по статусу</h3>
+        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+      <div class="block">
+        <h3>Распределение по категориям</h3>
+        <div class="chart-wrap"><canvas id="chart-cat"></canvas></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Результаты</h3>
+      <input type="text" class="filter" id="batch-filter" placeholder="фильтр по имени / хосту...">
+      <div class="table-wrap">
+        <table class="results-table" id="batch-results">
+          <thead><tr>
+            <th data-sort="name">Сайт</th>
+            <th data-sort="host">Хост</th>
+            <th>Категория</th>
+            <th data-sort="loss">Потери</th>
+            <th data-sort="avg">Avg ms</th>
+            <th data-sort="max">Max ms</th>
+            <th>HTTP</th>
+            <th data-sort="status">Статус</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hosts -->
+  <section class="panel" id="panel-hosts">
+    <h2>Хосты</h2>
+    <div class="block">
+      <div class="hosts-toolbar">
+        <input type="text" id="h-input-host" placeholder="ip / домен">
+        <input type="text" id="h-input-name" placeholder="имя">
+        <select id="h-input-cat">
+          <option value="custom">custom</option>
+          <option value="web">web</option>
+          <option value="dns">dns</option>
+        </select>
+        <button class="btn primary" id="h-add">+ Добавить</button>
+      </div>
+      <table class="hosts-table" id="hosts-table">
+        <thead><tr><th>#</th><th>Хост</th><th>Имя</th><th>Категория</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Reports -->
+  <section class="panel" id="panel-reports">
+    <h2>Отчёты</h2>
+    <div class="block">
+      <div class="reports-toolbar">
+        <button class="btn" id="reports-refresh">Обновить</button>
+      </div>
+      <table class="reports-table" id="reports-table">
+        <thead><tr><th>Имя</th><th>Дата</th><th>Размер</th><th>Тип</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: report viewer -->
+<div class="modal" id="report-modal" hidden>
+  <div class="modal-content">
+    <div class="modal-head">
+      <h3 id="report-modal-title">Отчёт</h3>
+      <button class="btn ghost" id="report-modal-close">×</button>
+    </div>
+    <div class="modal-body" id="report-modal-body"></div>
+  </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/hosts.js"></script>
+<script src="/static/js/diagnose.js"></script>
+<script src="/static/js/monitor.js"></script>
+<script src="/static/js/reports.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

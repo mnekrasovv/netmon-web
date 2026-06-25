@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.idea/
+.vscode/
+configs/settings.json
+reports/*.txt
+reports/*.html
+reports/*.json
+!reports/.gitkeep
