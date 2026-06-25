@@ -92,11 +92,14 @@ code, pre, .mono {
   box-shadow: 0 4px 10px var(--accent-soft);
 }
 .brand-logo {
-  width: 32px;
-  height: 32px;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: 32px;
+  max-height: 32px;
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  flex-shrink: 0;
 }
 .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.2px; }
 .brand-sub  { color: var(--text-dim); font-size: 11px; }
