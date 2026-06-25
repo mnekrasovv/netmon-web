@@ -36,31 +36,22 @@ const Reports = {
   },
 
   async open(name) {
-    const modal = $('#report-modal');
-    $('#report-modal-title').textContent = name;
-    const body = $('#report-modal-body');
-    body.innerHTML = '';
+    let body;
     if (name.endsWith('.html')) {
-      body.appendChild(el('iframe', { src: `/api/reports/${encodeURIComponent(name)}` }));
+      body = el('iframe', { src: `/api/reports/${encodeURIComponent(name)}` });
     } else if (name.endsWith('.json')) {
       const r = await fetch(`/api/reports/${encodeURIComponent(name)}`);
       const j = await r.json();
-      body.appendChild(el('pre', {}, JSON.stringify(j, null, 2)));
+      body = el('pre', {}, JSON.stringify(j, null, 2));
     } else {
       const r = await fetch(`/api/reports/${encodeURIComponent(name)}`);
       const t = await r.text();
-      body.appendChild(el('pre', {}, t));
+      body = el('pre', {}, t);
     }
-    modal.hidden = false;
+    openModal(name, body);
   },
 
   initUI() {
     $('#reports-refresh').addEventListener('click', () => this.refresh());
-    $('#report-modal-close').addEventListener('click', () => {
-      $('#report-modal').hidden = true;
-    });
-    $('#report-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'report-modal') $('#report-modal').hidden = true;
-    });
   },
 };

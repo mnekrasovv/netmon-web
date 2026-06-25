@@ -15,17 +15,21 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from core import batch, dns_check, hosts, http_check, ping, reports, sysinfo, trace
+from core import (
+    batch, dns_check, hosts, http_check, live_dashboard, lookup, parsers,
+    ping, reports, sites, suggestions, sysinfo, tcp_check, trace,
+)
+from core.runner import IS_WINDOWS, has, run_cmd
 
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
 
 app = FastAPI(title="netmon-web")
 
+
 # ── SSE helpers ──────────────────────────────────────────────────────────────────
 
 async def sse_from_sync(sync_gen: Iterator, mapper=None):
-    """Wrap a sync generator into an async SSE response (running in executor)."""
     loop = asyncio.get_event_loop()
     _SENTINEL = object()
 
@@ -104,7 +108,7 @@ async def api_hosts_update(idx: int, request: Request):
     return {"ok": True}
 
 
-# ── REST: sysinfo / gateway ──────────────────────────────────────────────────────
+# ── REST: sysinfo ────────────────────────────────────────────────────────────────
 
 @app.get("/api/sysinfo")
 def api_sysinfo():
@@ -116,11 +120,108 @@ def api_gateway():
     return {"gateway": ping.get_gateway()}
 
 
-# ── REST: external IP ────────────────────────────────────────────────────────────
-
 @app.get("/api/external-ip")
 def api_external_ip():
     return http_check.external_ip()
+
+
+# ── REST: parsed diagnostics ─────────────────────────────────────────────────────
+
+@app.get("/api/parsed/ping")
+def api_parsed_ping(host: str, count: int = 10):
+    if IS_WINDOWS:
+        cmd = ["ping", "-n", str(count), "-w", "1500", host]
+    else:
+        cmd = ["ping", "-c", str(count), "-W", "2", "-i", "0.5", host]
+    out = run_cmd(cmd, timeout=count * 3 + 10)
+    return {"raw": out, "parsed": parsers.parse_ping(out, host, count)}
+
+
+@app.get("/api/parsed/trace")
+def api_parsed_trace(host: str):
+    if IS_WINDOWS:
+        cmd = ["tracert", "-d", host]
+    elif has("traceroute"):
+        cmd = ["traceroute", "-n", "-w", "3", "-m", "30", host]
+    elif has("tracepath"):
+        cmd = ["tracepath", "-n", host]
+    else:
+        return {"raw": "", "parsed": [], "error": "traceroute not available"}
+    out = run_cmd(cmd, timeout=180)
+    return {"raw": out, "parsed": parsers.parse_traceroute(out)}
+
+
+@app.get("/api/parsed/mtr")
+def api_parsed_mtr(host: str, cycles: int = 10):
+    """Pure-python MTR returns structured hops."""
+    # Get trace first
+    if IS_WINDOWS:
+        trace_out = run_cmd(["tracert", "-d", host], timeout=120)
+    elif has("traceroute"):
+        trace_out = run_cmd(["traceroute", "-n", "-w", "2", "-m", "30", host], timeout=120)
+    elif has("tracepath"):
+        trace_out = run_cmd(["tracepath", "-n", host], timeout=120)
+    else:
+        return {"hops": [], "error": "traceroute not available"}
+
+    trace_hops = parsers.parse_traceroute(trace_out)
+    seen = set()
+    structured_hops = []
+    for h in trace_hops:
+        ip = h.get("ip")
+        if not ip:
+            structured_hops.append({
+                "hop": h["hop"], "ip": None, "timeout": True,
+                "loss": 100.0, "avg": None, "min": None, "max": None,
+                "sent": 0, "recv": 0,
+            })
+            continue
+        if ip in seen:
+            continue
+        seen.add(ip)
+        stats = ping.ping_stats(ip, count=cycles, fast=True)
+        structured_hops.append({
+            "hop": h["hop"],
+            "ip": ip,
+            "timeout": False,
+            "loss": stats["loss"],
+            "avg": stats["avg"],
+            "min": stats["min"],
+            "max": stats["max"],
+            "sent": stats["sent"],
+            "recv": stats["recv"],
+        })
+
+    return {"target": host, "hops": structured_hops}
+
+
+@app.get("/api/parsed/http")
+def api_parsed_http(url: str, timeout: int = 10):
+    return http_check.http_check(url, timeout)
+
+
+@app.get("/api/parsed/interfaces")
+def api_parsed_interfaces():
+    if IS_WINDOWS:
+        out = run_cmd(["ipconfig", "/all"], timeout=15)
+    elif has("ip"):
+        out = run_cmd(["ip", "addr", "show"], timeout=10)
+    elif has("ifconfig"):
+        out = run_cmd(["ifconfig", "-a"], timeout=10)
+    else:
+        return {"interfaces": [], "raw": ""}
+    return {"raw": out, "interfaces": parsers.parse_interfaces(out)}
+
+
+@app.get("/api/parsed/connections")
+def api_parsed_connections():
+    if not IS_WINDOWS and has("ss"):
+        out = run_cmd(["ss", "-tunlp"], timeout=10)
+        rows = parsers.parse_connections_ss(out)
+    else:
+        out = run_cmd(["netstat", "-an"], timeout=15)
+        rows = parsers.parse_connections_netstat(out)
+    return {"raw": out, "connections": rows}
 
 
 # ── REST: DNS ────────────────────────────────────────────────────────────────────
@@ -135,15 +236,125 @@ def api_dns_pings():
     return {"pings": dns_check.dns_server_pings()}
 
 
-# ── REST: sites (batch) ──────────────────────────────────────────────────────────
+# ── REST: tools (tcp / whois / nslookup) ─────────────────────────────────────────
+
+@app.get("/api/tcp")
+def api_tcp(host: str, ports: str = Query(..., description="comma-separated"), timeout: float = 3.0):
+    plist = []
+    for p in ports.split(","):
+        p = p.strip()
+        if not p:
+            continue
+        if p.lower() in tcp_check.PORT_PRESETS:
+            plist.append(tcp_check.PORT_PRESETS[p.lower()])
+        else:
+            try:
+                plist.append(int(p))
+            except ValueError:
+                pass
+    if not plist:
+        raise HTTPException(400, "no valid ports")
+    return {"host": host, "results": tcp_check.check_ports(host, plist, timeout)}
+
+
+@app.get("/api/tcp/presets")
+def api_tcp_presets():
+    return tcp_check.PORT_PRESETS
+
+
+@app.get("/api/whois")
+def api_whois(host: str):
+    return lookup.whois(host)
+
+
+@app.get("/api/nslookup")
+def api_nslookup(host: str, server: str = "", type: str = "A"):
+    return lookup.nslookup(host, server, type)
+
+
+# ── REST: sites (full CRUD) ──────────────────────────────────────────────────────
 
 @app.get("/api/sites")
-def api_sites():
-    cfg = batch.load_sites()
-    cats = []
-    for cat, sites in cfg.get("categories", {}).items():
-        cats.append({"name": cat, "count": len(sites)})
-    return {"categories": cats}
+def api_sites_summary():
+    return sites.get_summary()
+
+
+@app.get("/api/sites/all")
+def api_sites_all():
+    return sites.get_all()
+
+
+@app.post("/api/sites/categories")
+async def api_sites_add_cat(request: Request):
+    data = await request.json()
+    name = (data.get("name") or "").strip()
+    if not name:
+        raise HTTPException(400, "name required")
+    if not sites.add_category(name):
+        raise HTTPException(409, "category exists or invalid")
+    return {"ok": True}
+
+
+@app.delete("/api/sites/categories/{name}")
+def api_sites_del_cat(name: str):
+    if not sites.delete_category(name):
+        raise HTTPException(404, "not found")
+    return {"ok": True}
+
+
+@app.put("/api/sites/categories/{name}")
+async def api_sites_rename_cat(name: str, request: Request):
+    data = await request.json()
+    new = (data.get("new") or "").strip()
+    if not sites.rename_category(name, new):
+        raise HTTPException(400, "rename failed")
+    return {"ok": True}
+
+
+@app.post("/api/sites/categories/{name}/sites")
+async def api_sites_add_site(name: str, request: Request):
+    data = await request.json()
+    host = (data.get("host") or "").strip()
+    site_name = (data.get("name") or "").strip()
+    if not host:
+        raise HTTPException(400, "host required")
+    if not sites.add_site(name, host, site_name):
+        raise HTTPException(400, "add failed")
+    return {"ok": True}
+
+
+@app.delete("/api/sites/categories/{name}/sites/{idx}")
+def api_sites_del_site(name: str, idx: int):
+    if not sites.delete_site(name, idx):
+        raise HTTPException(404, "not found")
+    return {"ok": True}
+
+
+@app.put("/api/sites/categories/{name}/sites/{idx}")
+async def api_sites_upd_site(name: str, idx: int, request: Request):
+    data = await request.json()
+    host = (data.get("host") or "").strip()
+    site_name = (data.get("name") or "").strip()
+    if not host:
+        raise HTTPException(400, "host required")
+    if not sites.update_site(name, idx, host, site_name):
+        raise HTTPException(404, "not found")
+    return {"ok": True}
+
+
+@app.post("/api/sites/categories/{name}/bulk")
+async def api_sites_bulk(name: str, request: Request):
+    data = await request.json()
+    text = data.get("text") or ""
+    count = sites.bulk_import(name, text)
+    return {"added": count}
+
+
+@app.post("/api/sites/reset")
+def api_sites_reset():
+    if not sites.reset_to_default():
+        raise HTTPException(404, "no default backup")
+    return {"ok": True}
 
 
 # ── REST: reports ────────────────────────────────────────────────────────────────
@@ -181,8 +392,6 @@ def api_reports_delete(name: str):
     return {"ok": True}
 
 
-# ── REST: save report from buffer ────────────────────────────────────────────────
-
 @app.post("/api/reports/save")
 async def api_reports_save(request: Request):
     data = await request.json()
@@ -205,7 +414,48 @@ async def api_reports_save_batch_html(request: Request):
     return {"html": name, "json": json_name}
 
 
-# ── SSE streams ──────────────────────────────────────────────────────────────────
+@app.post("/api/reports/save-json")
+async def api_reports_save_json(request: Request):
+    data = await request.json()
+    prefix = (data.get("prefix") or "report").strip()
+    payload = data.get("data")
+    if payload is None:
+        raise HTTPException(400, "data required")
+    name = reports.save_json(prefix, payload)
+    return {"name": name}
+
+
+# ── REST: suggestions ────────────────────────────────────────────────────────────
+
+@app.post("/api/suggestions")
+async def api_suggestions(request: Request):
+    data = await request.json()
+    return {"suggestions": suggestions.analyze(data)}
+
+
+# ── REST: live dashboard ─────────────────────────────────────────────────────────
+
+@app.get("/api/live/services")
+def api_live_services():
+    return {"services": live_dashboard.load_services()}
+
+
+@app.put("/api/live/services")
+async def api_live_set_services(request: Request):
+    data = await request.json()
+    svcs = data.get("services")
+    if not isinstance(svcs, list):
+        raise HTTPException(400, "services must be list")
+    live_dashboard.save_services(svcs)
+    return {"ok": True}
+
+
+@app.get("/api/live/check")
+def api_live_check():
+    return {"results": live_dashboard.check_all()}
+
+
+# ── SSE: raw streams ─────────────────────────────────────────────────────────────
 
 @app.get("/api/stream/ping")
 async def stream_ping(host: str, count: int = 10):
@@ -257,11 +507,11 @@ async def stream_arp():
     return sse_response(sse_from_sync(sysinfo.arp_stream()))
 
 
-# ── SSE: batch monitor (sends structured events, not lines) ──────────────────────
+# ── SSE: batch monitor ───────────────────────────────────────────────────────────
 
 @app.get("/api/stream/batch")
 async def stream_batch(
-    categories: Optional[str] = Query(None, description="comma-separated"),
+    categories: Optional[str] = Query(None),
     ping_count: int = 10,
     workers: int = 20,
     no_http: bool = False,
@@ -297,7 +547,7 @@ def main():
     ap = argparse.ArgumentParser(description="netmon-web server")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--no-browser", action="store_true", help="не открывать браузер автоматически")
+    ap.add_argument("--no-browser", action="store_true")
     args = ap.parse_args()
 
     url = f"http://{args.host}:{args.port}"

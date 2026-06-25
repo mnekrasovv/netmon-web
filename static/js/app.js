@@ -1,22 +1,38 @@
-// App entry — tab routing, dashboard, initial loads
+// App entry: tab routing, clock, init
 
 const App = {
+  current: null,
+
   async showTab(name) {
-    $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    if (this.current === name) return;
+    if (this.current === 'dashboard') Dashboard.deactivate();
+    this.current = name;
+
+    $$('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     $$('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
-    if (name === 'dashboard') await Dashboard.refresh();
-    if (name === 'reports') await Reports.refresh();
-    if (name === 'hosts') { await Hosts.load(); Hosts.render(); }
+
+    const titles = {
+      dashboard: 'Dashboard',
+      diagnose:  'Diagnose',
+      monitor:   'Monitor',
+      hosts:     'Hosts',
+      sites:     'Sites editor',
+      tools:     'Tools',
+      reports:   'Reports',
+    };
+    $('#page-title').textContent = titles[name] || name;
+
+    if (name === 'dashboard') await Dashboard.activate();
+    if (name === 'reports')   await Reports.refresh();
+    if (name === 'hosts')     { await Hosts.load(); Hosts.render(); }
+    if (name === 'sites')     await Sites.load();
+    if (name === 'monitor')   await Monitor.loadCategories();
+
     location.hash = name;
   },
 
-  initTabs() {
-    $$('.tab').forEach(t => {
-      t.addEventListener('click', () => this.showTab(t.dataset.tab));
-    });
-    $$('[data-tab-go]').forEach(b => {
-      b.addEventListener('click', () => this.showTab(b.dataset.tabGo));
-    });
+  initNav() {
+    $$('.nav-item').forEach(t => t.addEventListener('click', () => this.showTab(t.dataset.tab)));
   },
 
   startClock() {
@@ -26,73 +42,32 @@ const App = {
     tick();
     setInterval(tick, 1000);
   },
-};
 
-const Dashboard = {
-  async refresh() {
-    try {
-      const sys = await API.get('/api/sysinfo');
-      $('#sys-host').textContent = sys.hostname || '—';
-
-      const t = $('#sysinfo-table');
-      t.innerHTML = '';
-      const rows = [
-        ['Hostname', sys.hostname],
-        ['ОС', sys.os + (sys.distrib ? ` · ${sys.distrib}` : '')],
-        ['Архитектура', sys.arch],
-        ['Python', sys.python],
-        ['Uptime', sys.uptime],
-        ['Пользователь', sys.user],
-      ];
-      rows.forEach(([k, v]) => {
-        if (!v) return;
-        const tr = el('tr', {}, el('td', {}, k), el('td', {}, String(v)));
-        t.appendChild(tr);
-      });
-
-      const hosts = await API.get('/api/hosts');
-      $('#card-hosts').textContent = hosts.hosts.length;
-
-      const gw = await API.get('/api/gateway');
-      $('#card-gw').textContent = gw.gateway || '—';
-
-      // External IP — fire and forget (could be slow)
-      this.loadExternalIP();
-      await Reports.refresh();
-    } catch (e) {
-      console.error(e);
-    }
-  },
-
-  async loadExternalIP() {
-    try {
-      const r = await API.get('/api/external-ip');
-      const ip = r.geo?.ip || Object.values(r.services).find(x => x) || '—';
-      $('#card-ip').textContent = ip;
-    } catch (e) {
-      $('#card-ip').textContent = '—';
-    }
+  initModal() {
+    $('#modal-close').addEventListener('click', closeModal);
+    $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
   },
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-  App.initTabs();
+  Theme.init();
+  App.initNav();
   App.startClock();
+  App.initModal();
   Hosts.initUI();
   Diagnose.initUI();
   Monitor.initUI();
+  Tools.initUI();
+  Sites.initUI();
   Reports.initUI();
+  Dashboard.initUI();
 
+  await Tools.loadPresets();
   await Hosts.load();
   Hosts.render();
   Diagnose.renderHostsList();
-  await Monitor.loadCategories();
 
   const tab = (location.hash || '#dashboard').slice(1);
-  await App.showTab(['dashboard','diagnose','monitor','hosts','reports'].includes(tab) ? tab : 'dashboard');
-});
-
-// quick-action handler
-document.addEventListener('click', (e) => {
-  if (e.target.matches('[data-quick="dashboard-refresh"]')) Dashboard.refresh();
+  const valid = ['dashboard', 'diagnose', 'monitor', 'tools', 'hosts', 'sites', 'reports'];
+  await App.showTab(valid.includes(tab) ? tab : 'dashboard');
 });

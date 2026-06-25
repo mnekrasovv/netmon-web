@@ -1,116 +1,499 @@
 {
   "categories": {
     "search_engines": [
-      {"name": "Google",        "host": "google.com",            "url": "https://www.google.com"},
-      {"name": "Яндекс",        "host": "yandex.ru",             "url": "https://www.yandex.ru"},
-      {"name": "Bing",          "host": "bing.com",              "url": "https://www.bing.com"},
-      {"name": "DuckDuckGo",    "host": "duckduckgo.com",        "url": "https://duckduckgo.com"},
-      {"name": "Yahoo",         "host": "yahoo.com",             "url": "https://www.yahoo.com"},
-      {"name": "Baidu",         "host": "baidu.com",             "url": "https://www.baidu.com"},
-      {"name": "Рамблер",       "host": "rambler.ru",            "url": "https://www.rambler.ru"},
-      {"name": "Mail.ru",       "host": "mail.ru",               "url": "https://mail.ru"}
+      {
+        "name": "Google",
+        "host": "google.com",
+        "url": "https://www.google.com"
+      },
+      {
+        "name": "Яндекс",
+        "host": "yandex.ru",
+        "url": "https://www.yandex.ru"
+      },
+      {
+        "name": "Bing",
+        "host": "bing.com",
+        "url": "https://www.bing.com"
+      },
+      {
+        "name": "DuckDuckGo",
+        "host": "duckduckgo.com",
+        "url": "https://duckduckgo.com"
+      },
+      {
+        "name": "Yahoo",
+        "host": "yahoo.com",
+        "url": "https://www.yahoo.com"
+      },
+      {
+        "name": "Baidu",
+        "host": "baidu.com",
+        "url": "https://www.baidu.com"
+      },
+      {
+        "name": "Рамблер",
+        "host": "rambler.ru",
+        "url": "https://www.rambler.ru"
+      },
+      {
+        "name": "Mail.ru",
+        "host": "mail.ru",
+        "url": "https://mail.ru"
+      }
     ],
     "social_media": [
-      {"name": "ВКонтакте",     "host": "vk.com",                "url": "https://vk.com"},
-      {"name": "Одноклассники", "host": "ok.ru",                 "url": "https://ok.ru"},
-      {"name": "Facebook",      "host": "facebook.com",          "url": "https://www.facebook.com"},
-      {"name": "Instagram",     "host": "instagram.com",         "url": "https://www.instagram.com"},
-      {"name": "X / Twitter",   "host": "x.com",                 "url": "https://x.com"},
-      {"name": "TikTok",        "host": "tiktok.com",            "url": "https://www.tiktok.com"},
-      {"name": "Telegram",      "host": "telegram.org",          "url": "https://telegram.org"},
-      {"name": "YouTube",       "host": "youtube.com",           "url": "https://www.youtube.com"},
-      {"name": "LinkedIn",      "host": "linkedin.com",          "url": "https://www.linkedin.com"},
-      {"name": "Pinterest",     "host": "pinterest.com",         "url": "https://www.pinterest.com"},
-      {"name": "Reddit",        "host": "reddit.com",            "url": "https://www.reddit.com"},
-      {"name": "Discord",       "host": "discord.com",           "url": "https://discord.com"},
-      {"name": "Twitch",        "host": "twitch.tv",             "url": "https://www.twitch.tv"},
-      {"name": "Snapchat",      "host": "snapchat.com",          "url": "https://www.snapchat.com"},
-      {"name": "RuTube",        "host": "rutube.ru",             "url": "https://rutube.ru"}
+      {
+        "name": "ВКонтакте",
+        "host": "vk.com",
+        "url": "https://vk.com"
+      },
+      {
+        "name": "Одноклассники",
+        "host": "ok.ru",
+        "url": "https://ok.ru"
+      },
+      {
+        "name": "Facebook",
+        "host": "facebook.com",
+        "url": "https://www.facebook.com"
+      },
+      {
+        "name": "Instagram",
+        "host": "instagram.com",
+        "url": "https://www.instagram.com"
+      },
+      {
+        "name": "X / Twitter",
+        "host": "x.com",
+        "url": "https://x.com"
+      },
+      {
+        "name": "TikTok",
+        "host": "tiktok.com",
+        "url": "https://www.tiktok.com"
+      },
+      {
+        "name": "Telegram",
+        "host": "telegram.org",
+        "url": "https://telegram.org"
+      },
+      {
+        "name": "YouTube",
+        "host": "youtube.com",
+        "url": "https://www.youtube.com"
+      },
+      {
+        "name": "LinkedIn",
+        "host": "linkedin.com",
+        "url": "https://www.linkedin.com"
+      },
+      {
+        "name": "Pinterest",
+        "host": "pinterest.com",
+        "url": "https://www.pinterest.com"
+      },
+      {
+        "name": "Reddit",
+        "host": "reddit.com",
+        "url": "https://www.reddit.com"
+      },
+      {
+        "name": "Discord",
+        "host": "discord.com",
+        "url": "https://discord.com"
+      },
+      {
+        "name": "Twitch",
+        "host": "twitch.tv",
+        "url": "https://www.twitch.tv"
+      },
+      {
+        "name": "Snapchat",
+        "host": "snapchat.com",
+        "url": "https://www.snapchat.com"
+      },
+      {
+        "name": "RuTube",
+        "host": "rutube.ru",
+        "url": "https://rutube.ru"
+      }
     ],
     "news_media": [
-      {"name": "РБК",           "host": "rbc.ru",                "url": "https://www.rbc.ru"},
-      {"name": "Lenta.ru",      "host": "lenta.ru",              "url": "https://lenta.ru"},
-      {"name": "РИА Новости",   "host": "ria.ru",                "url": "https://ria.ru"},
-      {"name": "ТАСС",          "host": "tass.ru",               "url": "https://tass.ru"},
-      {"name": "Коммерсантъ",   "host": "kommersant.ru",         "url": "https://www.kommersant.ru"},
-      {"name": "BBC",           "host": "bbc.com",               "url": "https://www.bbc.com"},
-      {"name": "CNN",           "host": "cnn.com",               "url": "https://edition.cnn.com"},
-      {"name": "Reuters",       "host": "reuters.com",           "url": "https://www.reuters.com"},
-      {"name": "RT",            "host": "rt.com",                "url": "https://www.rt.com"},
-      {"name": "Известия",      "host": "iz.ru",                 "url": "https://iz.ru"},
-      {"name": "Ведомости",     "host": "vedomosti.ru",          "url": "https://www.vedomosti.ru"},
-      {"name": "Газета.ру",     "host": "gazeta.ru",             "url": "https://www.gazeta.ru"},
-      {"name": "Forbes RU",     "host": "forbes.ru",             "url": "https://www.forbes.ru"},
-      {"name": "NY Times",      "host": "nytimes.com",           "url": "https://www.nytimes.com"},
-      {"name": "The Guardian",  "host": "theguardian.com",       "url": "https://www.theguardian.com"}
+      {
+        "name": "РБК",
+        "host": "rbc.ru",
+        "url": "https://www.rbc.ru"
+      },
+      {
+        "name": "Lenta.ru",
+        "host": "lenta.ru",
+        "url": "https://lenta.ru"
+      },
+      {
+        "name": "РИА Новости",
+        "host": "ria.ru",
+        "url": "https://ria.ru"
+      },
+      {
+        "name": "ТАСС",
+        "host": "tass.ru",
+        "url": "https://tass.ru"
+      },
+      {
+        "name": "Коммерсантъ",
+        "host": "kommersant.ru",
+        "url": "https://www.kommersant.ru"
+      },
+      {
+        "name": "BBC",
+        "host": "bbc.com",
+        "url": "https://www.bbc.com"
+      },
+      {
+        "name": "CNN",
+        "host": "cnn.com",
+        "url": "https://edition.cnn.com"
+      },
+      {
+        "name": "Reuters",
+        "host": "reuters.com",
+        "url": "https://www.reuters.com"
+      },
+      {
+        "name": "RT",
+        "host": "rt.com",
+        "url": "https://www.rt.com"
+      },
+      {
+        "name": "Известия",
+        "host": "iz.ru",
+        "url": "https://iz.ru"
+      },
+      {
+        "name": "Ведомости",
+        "host": "vedomosti.ru",
+        "url": "https://www.vedomosti.ru"
+      },
+      {
+        "name": "Газета.ру",
+        "host": "gazeta.ru",
+        "url": "https://www.gazeta.ru"
+      },
+      {
+        "name": "Forbes RU",
+        "host": "forbes.ru",
+        "url": "https://www.forbes.ru"
+      },
+      {
+        "name": "NY Times",
+        "host": "nytimes.com",
+        "url": "https://www.nytimes.com"
+      },
+      {
+        "name": "The Guardian",
+        "host": "theguardian.com",
+        "url": "https://www.theguardian.com"
+      }
     ],
     "general_services": [
-      {"name": "Wikipedia",     "host": "wikipedia.org",         "url": "https://www.wikipedia.org"},
-      {"name": "Amazon",        "host": "amazon.com",            "url": "https://www.amazon.com"},
-      {"name": "Ozon",          "host": "ozon.ru",               "url": "https://www.ozon.ru"},
-      {"name": "Wildberries",   "host": "wildberries.ru",        "url": "https://www.wildberries.ru"},
-      {"name": "Авито",         "host": "avito.ru",              "url": "https://www.avito.ru"},
-      {"name": "Сбербанк",      "host": "sberbank.ru",           "url": "https://www.sberbank.ru"},
-      {"name": "Госуслуги",     "host": "gosuslugi.ru",          "url": "https://gosuslugi.ru"},
-      {"name": "2ГИС",          "host": "2gis.ru",               "url": "https://2gis.ru"},
-      {"name": "КиноПоиск",     "host": "kinopoisk.ru",          "url": "https://www.kinopoisk.ru"},
-      {"name": "IVI",           "host": "ivi.ru",                "url": "https://www.ivi.ru"},
-      {"name": "AliExpress RU", "host": "aliexpress.ru",         "url": "https://aliexpress.ru"},
-      {"name": "СДЭК",          "host": "cdek.ru",               "url": "https://www.cdek.ru"},
-      {"name": "Яндекс Маркет", "host": "market.yandex.ru",      "url": "https://market.yandex.ru"},
-      {"name": "М.Видео",       "host": "mvideo.ru",             "url": "https://www.mvideo.ru"},
-      {"name": "ДНС",           "host": "dns-shop.ru",           "url": "https://www.dns-shop.ru"},
-      {"name": "Тинькофф",      "host": "tinkoff.ru",            "url": "https://www.tinkoff.ru"},
-      {"name": "Netflix",       "host": "netflix.com",           "url": "https://www.netflix.com"},
-      {"name": "Spotify",       "host": "spotify.com",           "url": "https://www.spotify.com"},
-      {"name": "Zoom",          "host": "zoom.us",               "url": "https://zoom.us"},
-      {"name": "Dropbox",       "host": "dropbox.com",           "url": "https://www.dropbox.com"}
+      {
+        "name": "Wikipedia",
+        "host": "wikipedia.org",
+        "url": "https://www.wikipedia.org"
+      },
+      {
+        "name": "Amazon",
+        "host": "amazon.com",
+        "url": "https://www.amazon.com"
+      },
+      {
+        "name": "Ozon",
+        "host": "ozon.ru",
+        "url": "https://www.ozon.ru"
+      },
+      {
+        "name": "Wildberries",
+        "host": "wildberries.ru",
+        "url": "https://www.wildberries.ru"
+      },
+      {
+        "name": "Авито",
+        "host": "avito.ru",
+        "url": "https://www.avito.ru"
+      },
+      {
+        "name": "Сбербанк",
+        "host": "sberbank.ru",
+        "url": "https://www.sberbank.ru"
+      },
+      {
+        "name": "Госуслуги",
+        "host": "gosuslugi.ru",
+        "url": "https://gosuslugi.ru"
+      },
+      {
+        "name": "2ГИС",
+        "host": "2gis.ru",
+        "url": "https://2gis.ru"
+      },
+      {
+        "name": "КиноПоиск",
+        "host": "kinopoisk.ru",
+        "url": "https://www.kinopoisk.ru"
+      },
+      {
+        "name": "IVI",
+        "host": "ivi.ru",
+        "url": "https://www.ivi.ru"
+      },
+      {
+        "name": "AliExpress RU",
+        "host": "aliexpress.ru",
+        "url": "https://aliexpress.ru"
+      },
+      {
+        "name": "СДЭК",
+        "host": "cdek.ru",
+        "url": "https://www.cdek.ru"
+      },
+      {
+        "name": "Яндекс Маркет",
+        "host": "market.yandex.ru",
+        "url": "https://market.yandex.ru"
+      },
+      {
+        "name": "М.Видео",
+        "host": "mvideo.ru",
+        "url": "https://www.mvideo.ru"
+      },
+      {
+        "name": "ДНС",
+        "host": "dns-shop.ru",
+        "url": "https://www.dns-shop.ru"
+      },
+      {
+        "name": "Тинькофф",
+        "host": "tinkoff.ru",
+        "url": "https://www.tinkoff.ru"
+      },
+      {
+        "name": "Netflix",
+        "host": "netflix.com",
+        "url": "https://www.netflix.com"
+      },
+      {
+        "name": "Spotify",
+        "host": "spotify.com",
+        "url": "https://www.spotify.com"
+      },
+      {
+        "name": "Zoom",
+        "host": "zoom.us",
+        "url": "https://zoom.us"
+      },
+      {
+        "name": "Dropbox",
+        "host": "dropbox.com",
+        "url": "https://www.dropbox.com"
+      }
     ],
     "tech_general": [
-      {"name": "GitHub",        "host": "github.com",            "url": "https://github.com"},
-      {"name": "Stack Overflow","host": "stackoverflow.com",     "url": "https://stackoverflow.com"},
-      {"name": "Microsoft",     "host": "microsoft.com",         "url": "https://www.microsoft.com"},
-      {"name": "Apple",         "host": "apple.com",             "url": "https://www.apple.com"},
-      {"name": "Cloudflare",    "host": "cloudflare.com",        "url": "https://www.cloudflare.com"},
-      {"name": "GitLab",        "host": "gitlab.com",            "url": "https://gitlab.com"},
-      {"name": "Docker Hub",    "host": "hub.docker.com",        "url": "https://hub.docker.com"},
-      {"name": "npm",           "host": "npmjs.com",             "url": "https://www.npmjs.com"},
-      {"name": "PyPI",          "host": "pypi.org",              "url": "https://pypi.org"},
-      {"name": "Medium",        "host": "medium.com",            "url": "https://medium.com"},
-      {"name": "Хабр",          "host": "habr.com",              "url": "https://habr.com"},
-      {"name": "Google Drive",  "host": "drive.google.com",      "url": "https://drive.google.com"},
-      {"name": "AWS",           "host": "aws.amazon.com",        "url": "https://aws.amazon.com"},
-      {"name": "Azure",         "host": "azure.microsoft.com",   "url": "https://azure.microsoft.com"},
-      {"name": "Fastly CDN",    "host": "fastly.com",            "url": "https://www.fastly.com"}
+      {
+        "name": "GitHub",
+        "host": "github.com",
+        "url": "https://github.com"
+      },
+      {
+        "name": "Stack Overflow",
+        "host": "stackoverflow.com",
+        "url": "https://stackoverflow.com"
+      },
+      {
+        "name": "Microsoft",
+        "host": "microsoft.com",
+        "url": "https://www.microsoft.com"
+      },
+      {
+        "name": "Apple",
+        "host": "apple.com",
+        "url": "https://www.apple.com"
+      },
+      {
+        "name": "Cloudflare",
+        "host": "cloudflare.com",
+        "url": "https://www.cloudflare.com"
+      },
+      {
+        "name": "GitLab",
+        "host": "gitlab.com",
+        "url": "https://gitlab.com"
+      },
+      {
+        "name": "Docker Hub",
+        "host": "hub.docker.com",
+        "url": "https://hub.docker.com"
+      },
+      {
+        "name": "npm",
+        "host": "npmjs.com",
+        "url": "https://www.npmjs.com"
+      },
+      {
+        "name": "PyPI",
+        "host": "pypi.org",
+        "url": "https://pypi.org"
+      },
+      {
+        "name": "Medium",
+        "host": "medium.com",
+        "url": "https://medium.com"
+      },
+      {
+        "name": "Хабр",
+        "host": "habr.com",
+        "url": "https://habr.com"
+      },
+      {
+        "name": "Google Drive",
+        "host": "drive.google.com",
+        "url": "https://drive.google.com"
+      },
+      {
+        "name": "AWS",
+        "host": "aws.amazon.com",
+        "url": "https://aws.amazon.com"
+      },
+      {
+        "name": "Azure",
+        "host": "azure.microsoft.com",
+        "url": "https://azure.microsoft.com"
+      },
+      {
+        "name": "Fastly CDN",
+        "host": "fastly.com",
+        "url": "https://www.fastly.com"
+      }
     ],
     "gaming": [
-      {"name": "Steam",         "host": "store.steampowered.com","url": "https://store.steampowered.com"},
-      {"name": "Blizzard",      "host": "battle.net",            "url": "https://www.battle.net"},
-      {"name": "Epic Games",    "host": "epicgames.com",         "url": "https://www.epicgames.com"},
-      {"name": "EA / Origin",   "host": "ea.com",                "url": "https://www.ea.com"},
-      {"name": "Ubisoft",       "host": "ubisoft.com",           "url": "https://www.ubisoft.com"},
-      {"name": "Riot Games",    "host": "riotgames.com",         "url": "https://www.riotgames.com"},
-      {"name": "Minecraft",     "host": "minecraft.net",         "url": "https://www.minecraft.net"},
-      {"name": "Rockstar Games","host": "rockstargames.com",     "url": "https://www.rockstargames.com"},
-      {"name": "GOG",           "host": "gog.com",               "url": "https://www.gog.com"},
-      {"name": "PlayStation",   "host": "playstation.com",       "url": "https://www.playstation.com"},
-      {"name": "Xbox",          "host": "xbox.com",              "url": "https://www.xbox.com"},
-      {"name": "Gaijin (WT)",   "host": "gaijin.net",            "url": "https://gaijin.net"},
-      {"name": "Wargaming (WoT)","host": "wargaming.net",        "url": "https://wargaming.net"},
-      {"name": "My.Games",      "host": "my.games",              "url": "https://my.games"},
-      {"name": "Valve",         "host": "valvesoftware.com",     "url": "https://www.valvesoftware.com"}
+      {
+        "name": "Steam",
+        "host": "store.steampowered.com",
+        "url": "https://store.steampowered.com"
+      },
+      {
+        "name": "Blizzard",
+        "host": "battle.net",
+        "url": "https://www.battle.net"
+      },
+      {
+        "name": "Epic Games",
+        "host": "epicgames.com",
+        "url": "https://www.epicgames.com"
+      },
+      {
+        "name": "EA / Origin",
+        "host": "ea.com",
+        "url": "https://www.ea.com"
+      },
+      {
+        "name": "Ubisoft",
+        "host": "ubisoft.com",
+        "url": "https://www.ubisoft.com"
+      },
+      {
+        "name": "Riot Games",
+        "host": "riotgames.com",
+        "url": "https://www.riotgames.com"
+      },
+      {
+        "name": "Minecraft",
+        "host": "minecraft.net",
+        "url": "https://www.minecraft.net"
+      },
+      {
+        "name": "Rockstar Games",
+        "host": "rockstargames.com",
+        "url": "https://www.rockstargames.com"
+      },
+      {
+        "name": "GOG",
+        "host": "gog.com",
+        "url": "https://www.gog.com"
+      },
+      {
+        "name": "PlayStation",
+        "host": "playstation.com",
+        "url": "https://www.playstation.com"
+      },
+      {
+        "name": "Xbox",
+        "host": "xbox.com",
+        "url": "https://www.xbox.com"
+      },
+      {
+        "name": "Gaijin (WT)",
+        "host": "gaijin.net",
+        "url": "https://gaijin.net"
+      },
+      {
+        "name": "Wargaming (WoT)",
+        "host": "wargaming.net",
+        "url": "https://wargaming.net"
+      },
+      {
+        "name": "My.Games",
+        "host": "my.games",
+        "url": "https://my.games"
+      },
+      {
+        "name": "Valve",
+        "host": "valvesoftware.com",
+        "url": "https://www.valvesoftware.com"
+      }
     ],
     "dns_infrastructure": [
-      {"name": "Cloudflare DNS","host": "1.1.1.1"},
-      {"name": "Google DNS",    "host": "8.8.8.8"},
-      {"name": "Google DNS 2",  "host": "8.8.4.4"},
-      {"name": "Quad9 DNS",     "host": "9.9.9.9"},
-      {"name": "Yandex DNS",    "host": "77.88.8.8"},
-      {"name": "OpenDNS",       "host": "208.67.222.222"},
-      {"name": "Ростелеком DNS","host": "212.48.195.228"},
-      {"name": "Билайн DNS",    "host": "217.118.66.243"},
-      {"name": "МТС DNS",       "host": "194.85.91.254"},
-      {"name": "Akamai CDN",    "host": "akamai.com",            "url": "https://www.akamai.com"}
+      {
+        "name": "Cloudflare DNS",
+        "host": "1.1.1.1"
+      },
+      {
+        "name": "Google DNS",
+        "host": "8.8.8.8"
+      },
+      {
+        "name": "Google DNS 2",
+        "host": "8.8.4.4"
+      },
+      {
+        "name": "Quad9 DNS",
+        "host": "9.9.9.9"
+      },
+      {
+        "name": "Yandex DNS",
+        "host": "77.88.8.8"
+      },
+      {
+        "name": "OpenDNS",
+        "host": "208.67.222.222"
+      },
+      {
+        "name": "Ростелеком DNS",
+        "host": "212.48.195.228"
+      },
+      {
+        "name": "Билайн DNS",
+        "host": "217.118.66.243"
+      },
+      {
+        "name": "МТС DNS",
+        "host": "194.85.91.254"
+      },
+      {
+        "name": "Akamai CDN",
+        "host": "akamai.com",
+        "url": "https://www.akamai.com"
+      }
     ]
   }
 }

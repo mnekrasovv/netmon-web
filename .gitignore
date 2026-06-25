@@ -6,6 +6,8 @@ __pycache__/
 .idea/
 .vscode/
 configs/settings.json
+configs/live.json
+configs/sites.default.json
 reports/*.txt
 reports/*.html
 reports/*.json

@@ -84,3 +84,15 @@ function formatTime(iso) {
   const d = new Date(iso);
   return d.toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'medium' });
 }
+
+function openModal(title, body) {
+  const modal = $('#modal');
+  $('#modal-title').textContent = title;
+  const root = $('#modal-body');
+  root.innerHTML = '';
+  if (body instanceof Node) root.appendChild(body);
+  else root.innerHTML = String(body || '');
+  modal.hidden = false;
+  return { body: root };
+}
+function closeModal() { $('#modal').hidden = true; }
