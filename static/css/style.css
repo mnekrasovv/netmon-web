@@ -317,6 +317,7 @@ input:focus, select:focus { border-color: var(--accent); }
   justify-content: center;
   z-index: 100;
 }
+.modal[hidden] { display: none; }
 .modal-content {
   background: var(--bg-card);
   border: 1px solid var(--border);
