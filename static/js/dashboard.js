@@ -6,37 +6,43 @@ const Dashboard = {
   autoTimer: null,
 
   async refreshSys() {
-    const sys = await API.get('/api/sysinfo');
-    $('#dash-host').textContent = sys.hostname || '—';
-    $('#dash-uptime').textContent = sys.uptime ? sys.uptime.split('.')[0] : '—';
-    $('#sys-meta').textContent = `${sys.os || ''}`;
+    // Каждый блок изолирован — падение одного эндпоинта не должно ронять остальные
+    try {
+      const sys = await API.get('/api/sysinfo');
+      const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+      set('#dash-host', sys.hostname || '—');
+      set('#dash-uptime', sys.uptime ? sys.uptime.split('.')[0] : '—');
 
-    const t = $('#sysinfo-table');
-    t.innerHTML = '';
-    [
-      ['Hostname', sys.hostname],
-      ['ОС', sys.os],
-      ['Дистрибутив', sys.distrib],
-      ['Архитектура', sys.arch],
-      ['Python', sys.python],
-      ['Uptime', sys.uptime],
-      ['Пользователь', sys.user],
-    ].forEach(([k, v]) => {
-      if (!v) return;
-      const tr = el('tr', {}, el('td', {}, k), el('td', {}, String(v)));
-      t.appendChild(tr);
-    });
+      const t = $('#sysinfo-table');
+      if (t) {
+        t.innerHTML = '';
+        [
+          ['Hostname', sys.hostname],
+          ['ОС', sys.os],
+          ['Дистрибутив', sys.distrib],
+          ['Архитектура', sys.arch],
+          ['Python', sys.python],
+          ['Uptime', sys.uptime],
+          ['Пользователь', sys.user],
+        ].forEach(([k, v]) => {
+          if (!v) return;
+          t.appendChild(el('tr', {}, el('td', {}, k), el('td', {}, String(v))));
+        });
+      }
+    } catch (e) { console.error('sysinfo:', e); }
 
     try {
       const gw = await API.get('/api/gateway');
-      $('#dash-gw').textContent = gw.gateway || '—';
-    } catch { $('#dash-gw').textContent = '—'; }
+      const e = $('#dash-gw'); if (e) e.textContent = gw.gateway || '—';
+    } catch (e) { console.error('gateway:', e); }
 
-    // External IP (async, may be slow)
+    // External IP — fire-and-forget, может быть медленным
     API.get('/api/external-ip').then(r => {
       const ip = (r.geo && r.geo.ip) || Object.values(r.services || {}).find(x => x) || '—';
-      $('#dash-ip').textContent = ip;
-    }).catch(() => { $('#dash-ip').textContent = '—'; });
+      const e = $('#dash-ip'); if (e) e.textContent = ip;
+    }).catch(() => {
+      const e = $('#dash-ip'); if (e) e.textContent = '—';
+    });
   },
 
   renderTile(svc) {
@@ -157,7 +163,10 @@ const Dashboard = {
   },
 
   initUI() {
-    $('#live-refresh').addEventListener('click', () => this.refresh());
+    $('#live-refresh').addEventListener('click', async () => {
+      await this.refreshSys();
+      await this.refresh();
+    });
     $('#live-autorefresh').addEventListener('change', () => this.startAutoRefresh());
     $('#live-interval').addEventListener('change', () => this.startAutoRefresh());
     $('#live-edit').addEventListener('click', () => this.openEditor());
