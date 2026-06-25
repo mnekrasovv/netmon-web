@@ -476,6 +476,7 @@ input.xxs { width: 56px; padding: 3px 6px; font-size: 12px; }
 .muted { color: var(--text-dim); }
 .xs { font-size: 12px; }
 .mt { margin-top: 12px; }
+.mt-s { margin-top: 8px; }
 .inline { display: inline-flex; align-items: center; gap: 6px; }
 .grow { flex: 1; }
 
